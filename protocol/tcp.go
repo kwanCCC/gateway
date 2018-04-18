@@ -35,7 +35,7 @@ func (tcp *TCP) Stop() error {
 	return nil
 }
 
-func (tcp *TCP) tcpFunction(conn *net.Conn) {
+func (tcp *TCP) tcpFunction(inConn *net.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Printf("tcp conn handler crashed with err : %s \nstack: %s", err, string(debug.Stack()))
@@ -50,6 +50,8 @@ func (tcp *TCP) tcpFunction(conn *net.Conn) {
 			if err := recover(); err != nil {
 				log.Printf("bind crashed %s", err)
 			}
+			(*inConn).Close()
+			outConn.Close()
 		}()
 		e1 := make(chan interface{}, 1)
 		e2 := make(chan interface{}, 1)
@@ -60,7 +62,7 @@ func (tcp *TCP) tcpFunction(conn *net.Conn) {
 				}
 			}()
 			//_, err := io.Copy(dst, src)
-			err := ioCopy(dst, src)
+			err := ioCopy(outConn, *inConn)
 			e1 <- err
 		}()
 		go func() {
@@ -70,7 +72,7 @@ func (tcp *TCP) tcpFunction(conn *net.Conn) {
 				}
 			}()
 			//_, err := io.Copy(src, dst)
-			err := ioCopy(src, dst)
+			err := ioCopy(*inConn, outConn)
 			e2 <- err
 		}()
 		var err interface{}
@@ -80,9 +82,6 @@ func (tcp *TCP) tcpFunction(conn *net.Conn) {
 		case err = <-e2:
 			//log.Printf("e2")
 		}
-		src.Close()
-		dst.Close()
-		fn(err)
 	}()
 }
 

@@ -4,6 +4,6 @@
   - flag parse
     - [X] use kingpin
   - Simple Proxy
-    - [ ] TCP
+    - [X] TCP
     - [ ] HTTP
     - [ ] HTTPS
