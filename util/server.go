@@ -7,12 +7,15 @@ import (
 )
 
 type Server struct {
-	Ip   string
-	Port int
+	Ip      string
+	Port    int
+	Address string
 }
 
-func (server *Server) ListenTCP(function func(conn net.Conn) (error)) (err error) {
-	tcpListener, e := net.ListenTCP("tcp", &net.TCPAddr{IP: []byte(server.Ip), Port: server.Port})
+func (server *Server) ListenTCP(function func(conn *net.Conn) (error)) (err error) {
+	var tcpAddr *net.TCPAddr
+	tcpAddr, err = net.ResolveTCPAddr("tcp", server.Address)
+	tcpListener, e := net.ListenTCP("tcp", tcpAddr)
 	if e != nil {
 		err = e
 		return
@@ -28,7 +31,7 @@ func (server *Server) ListenTCP(function func(conn net.Conn) (error)) (err error
 				conn, err = tcpListener.AcceptTCP()
 				if err == nil {
 					go func() {
-						function(conn)
+						function(&conn)
 					}()
 				} else {
 					log.Printf("TCP conn crashed , err : %s , \ntrace:%s", e, string(debug.Stack()))
