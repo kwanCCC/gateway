@@ -33,7 +33,7 @@ func (tcp *TCP) Stop() error {
 	return nil
 }
 
-func (tcp *TCP) tcpFunction(inConn net.Conn) (e error) {
+func (tcp *TCP) tcpFunction(inConn *net.Conn) (e error) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Printf("tcp conn handler crashed with err : %s \nstack: %s", err, string(debug.Stack()))
@@ -49,7 +49,7 @@ func (tcp *TCP) tcpFunction(inConn net.Conn) (e error) {
 			if err := recover(); err != nil {
 				log.Printf("bind crashed %s", err)
 			}
-			inConn.Close()
+			(*inConn).Close()
 			outConn.Close()
 		}()
 		e1 := make(chan interface{}, 1)
@@ -60,7 +60,7 @@ func (tcp *TCP) tcpFunction(inConn net.Conn) (e error) {
 					log.Printf("bind crashed %s", err)
 				}
 			}()
-			err := ioCopy(outConn, inConn)
+			err := ioCopy(outConn, *inConn)
 			e1 <- err
 		}()
 		go func() {
@@ -70,7 +70,7 @@ func (tcp *TCP) tcpFunction(inConn net.Conn) (e error) {
 				}
 			}()
 			//_, err := io.Copy(src, dst)
-			err := ioCopy(inConn, outConn)
+			err := ioCopy(*inConn, outConn)
 			e2 <- err
 		}()
 		var semaphore interface{}
