@@ -35,9 +35,9 @@ func Boot(name string) (err error) {
 			e := bootstrap.Protocol.Run()
 			if e != nil {
 				err = e
-				fmt.Errorf("boot %s fail and trace %s \n", name, string(debug.Stack()))
+				fmt.Errorf("setup %s fail and trace %s \n", name, string(debug.Stack()))
 			} else {
-				fmt.Printf("boot %s successfully \n", name)
+				fmt.Printf("setup %s successfully \n", name)
 			}
 		}()
 		return

@@ -1,6 +1,9 @@
 package protocol
 
-import "gopkg.in/alecthomas/kingpin.v2"
+import (
+	"gopkg.in/alecthomas/kingpin.v2"
+	"os"
+)
 
 type base struct {
 	NextStage    *string
@@ -18,18 +21,22 @@ type HTTPConfig struct {
 
 var tcpConfig *TCPConfig
 
-func init() {
+func InitConfig() {
 	tcpConfig = &TCPConfig{}
+	// flag parse
 	app := kingpin.New("gateway", "Let's be gopher")
-	localAddress := app.Flag("local", "listen local address").Required().Short('l').String()
-	nextStage := app.Flag("next", "proxy target").Required().Short('n').String()
-	timeout := app.Flag("timeout", "dial time out").Short('t').Default("5").Int()
+	app.Author(`666chan`)
+	tcpCommand := app.Command("tcp", "tcp config")
+	localAddress := tcpCommand.Flag("local", "listen local address").Required().Short('l').String()
+	nextStage := tcpCommand.Flag("next", "proxy target").Required().Short('n').String()
+	timeout := tcpCommand.Flag("timeout", "dial time out").Short('t').Default("5").Int()
+	//parse args
+	protocol := kingpin.MustParse(app.Parse(os.Args[1:]))
 	base := &base{nextStage, localAddress, timeout}
 	tcpConfig.Base = base
-}
-
-func Setup() {
 	if tcpConfig != nil {
-		Register("TCP", &TCP{*tcpConfig})
+		Register("tcp", &TCP{*tcpConfig})
 	}
+	Boot(protocol)
+
 }
